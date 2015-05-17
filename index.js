@@ -31,7 +31,7 @@ function html2Ts(){
 			return;
 		}
 
-		var templateContent = 'module $fileName { export var html = "$fileContent";}';
+		var templateContent = "module $fileName { export var html = \'$fileContent\';}";
 		var fileName = path.basename(file.path, '.html');
 		
 		if(!fileName){
