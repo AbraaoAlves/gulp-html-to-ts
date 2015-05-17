@@ -6,6 +6,24 @@ var PluginError = gutil.PluginError;
 //consts
 const PLUGIN_NAME = 'gulp-html-to-ts';
 
+// html -> js processing functions:
+// Originally from karma-html2js-preprocessor
+var escapeContent = function (content, quoteChar) {
+    quoteChar = quoteChar || '\'';
+	
+	var quoteRegexp = new RegExp('\\' + quoteChar, 'g');
+    var nlReplace = '';
+    
+	return content.replace(quoteRegexp, '\\' + quoteChar).replace(/\r?\n/g, nlReplace);
+};
+
+// Remove bom when reading utf8 files
+function stripBOM(str) {
+    return 0xFEFF === str.charCodeAt(0)
+        ? str.substring(1)
+        : str;
+}
+
 function html2Ts(){
 	return through.obj( function( file, enc, done ) {
 		if (file.isNull()) {
@@ -21,7 +39,8 @@ function html2Ts(){
 			return done();
 		}
 		
-		var content = templateContent.replace('$fileName', fileName).replace('$fileContent', file.contents.toString());
+		var content = stripBOM(escapeContent(file.contents.toString()));
+		content = templateContent.replace('$fileName', fileName).replace('$fileContent', content);
 		
 		if( file.isStream() ) {
 			var stream = through();
