@@ -24,14 +24,14 @@ function stripBOM(str) {
         : str;
 }
 
-function html2Ts(){
+function html2Ts(appPrefix){
 	return through.obj( function( file, enc, done ) {
 		if (file.isNull()) {
 			done(null, file); //empty file
 			return;
 		}
 
-		var templateContent = "module $fileName { export var html = \'$fileContent\';}";
+		var templateContent = "module $appPrefix$fileName { export var html = \'$fileContent\';}";
 		var fileName = path.basename(file.path, '.html');
 		
 		if(!fileName){
@@ -40,7 +40,10 @@ function html2Ts(){
 		}
 		
 		var content = stripBOM(escapeContent(file.contents.toString()));
-		content = templateContent.replace('$fileName', fileName).replace('$fileContent', content);
+		content = templateContent
+			.replace('$fileName', fileName)
+			.replace('$fileContent', content)
+			.replace('$appPrefix',appPrefix);
 		
 		if( file.isStream() ) {
 			var stream = through();
