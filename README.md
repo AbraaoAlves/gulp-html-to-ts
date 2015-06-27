@@ -13,7 +13,7 @@ Usage
 An example usage with gulp:
 ```javascript
 var gulp        = require('gulp');
-var html2ts = require('gulp-html2ts');
+var html2ts = require('gulp-html-to-ts');
 
 gulp.task('template', function() {
 	return gulp.src( 'my/template.html' )
