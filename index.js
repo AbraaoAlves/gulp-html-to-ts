@@ -4,7 +4,7 @@ var path = require('path');
 var PluginError = gutil.PluginError;
 
 //consts
-const PLUGIN_NAME = 'gulp-html-to-ts';
+var PLUGIN_NAME = 'gulp-html-to-ts';
 
 // html -> js processing functions:
 // Originally from karma-html2js-preprocessor
@@ -31,8 +31,23 @@ function html2Ts(appPrefix){
 			return;
 		}
 
-		var templateContent = "module $appPrefix$fileName { export var html = \'$fileContent\';}";
-		var fileName = path.basename(file.path, '.html');
+		//console.log("file:" + JSON.stringify(file));
+// 		file:{
+// 	history:["<fullFileName>"],
+// 	cwd:"<project root path>",
+// 	base: "<folder root path>"
+// }
+		
+		var templateContent = "module $appPrefix$folderName { export var $fileNameTemplate = \'$fileContent\';}";
+		var fileName = path.basename(file.path, '.htm');
+		
+		var dirName = path.dirname(file.path);
+		console.log("dirName:"+dirName);
+
+		//!!!! does not support 2 levels un root
+		//RL ...
+		var folderName = path.basename(dirName);
+		console.log("foldername:" + folderName);
 		
 		if(!fileName){
 			this.emit('error', new PluginError(PLUGIN_NAME, 'file <'+ file.path +'> not supported!'));
@@ -43,7 +58,8 @@ function html2Ts(appPrefix){
 		content = templateContent
 			.replace('$fileName', fileName)
 			.replace('$fileContent', content)
-			.replace('$appPrefix',appPrefix);
+			.replace('$appPrefix',appPrefix)
+			.replace("$folderName",folderName);
 		
 		if( file.isStream() ) {
 			var stream = through();
