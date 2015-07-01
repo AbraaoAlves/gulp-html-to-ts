@@ -25,6 +25,8 @@ function stripBOM(str) {
 }
 
 function html2Ts(appPrefix){
+	appPrefix = appPrefix || "";
+	
 	return through.obj( function( file, enc, done ) {
 		if (file.isNull()) {
 			done(null, file); //empty file
