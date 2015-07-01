@@ -30,5 +30,8 @@
   "bugs": {
     "url": "https://github.com/AbraaoAlves/gulp-html-to-ts/issues"
   },
-  "homepage": "https://github.com/AbraaoAlves/gulp-html-to-ts"
+  "homepage": "https://github.com/AbraaoAlves/gulp-html-to-ts",
+  "devDependencies": {
+    "gulp": "^3.9.0"
+  }
 }
