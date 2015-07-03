@@ -24,8 +24,20 @@ function stripBOM(str) {
         : str;
 }
 
-function html2Ts(appPrefix){
-	appPrefix = appPrefix || "";
+function fillConfig(config, folderName, fileName){
+	for (var key in config) {
+		if (config.hasOwnProperty(key)) {
+			config[key] = config[key].replace('{$folderName}', folderName).replace('{$fileName}', fileName);
+		}
+	}
+}
+
+function html2Ts(appPrefixOrConfig){
+	var config = appPrefixOrConfig || {moduleName:'{$fileName}', propertyName:'html'};
+	
+	if(typeof(config) == "string"){
+		config = {moduleName:appPrefixOrConfig+'.{$folderName}', propertyName:'html'};
+	}	
 	
 	return through.obj( function( file, enc, done ) {
 		if (file.isNull()) {
@@ -33,35 +45,23 @@ function html2Ts(appPrefix){
 			return;
 		}
 
-		//console.log("file:" + JSON.stringify(file));
-// 		file:{
-// 	history:["<fullFileName>"],
-// 	cwd:"<project root path>",
-// 	base: "<folder root path>"
-// }
-		
-		var templateContent = "module $appPrefix$folderName { export var $fileNameTemplate = \'$fileContent\';}";
-		var fileName = path.basename(file.path, '.htm');
-		
-		var dirName = path.dirname(file.path);
-		console.log("dirName:"+dirName);
-
-		//!!!! does not support 2 levels un root
-		//RL ...
-		var folderName = path.basename(dirName);
-		console.log("foldername:" + folderName);
+		var templateContent = "module $moduleName { export var $propertyName = \'$fileContent\';}";
+		var fileName = path.basename(file.path, '.html');
 		
 		if(!fileName){
 			this.emit('error', new PluginError(PLUGIN_NAME, 'file <'+ file.path +'> not supported!'));
 			return done();
 		}
-		
+
+		var dirName = path.dirname(file.path);
+		var folderName = path.basename(dirName);
 		var content = stripBOM(escapeContent(file.contents.toString()));
+		
+		fillConfig(config, folderName, fileName);
 		content = templateContent
-			.replace('$fileName', fileName)
-			.replace('$fileContent', content)
-			.replace('$appPrefix',appPrefix)
-			.replace("$folderName",folderName);
+			.replace('$moduleName', config.moduleName)
+			.replace("$propertyName", config.propertyName)
+			.replace('$fileContent', content);
 		
 		if( file.isStream() ) {
 			var stream = through();
