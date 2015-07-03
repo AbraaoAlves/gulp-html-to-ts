@@ -16,9 +16,11 @@ var gulp        = require('gulp');
 var html2ts = require('gulp-html-to-ts');
 
 gulp.task('template', function() {
-	return gulp.src( 'my/template.html' )
-	.pipe( html2ts() )
-	.pipe( gulp.dest( './' ) ); //generate my/template.html.ts
+	return gulp.src('my/template.html')
+	.pipe(html2ts())
+  //.pipe(html2ts('app'))
+  //.pipe(html2ts({ moduleName: '{$folderName}', propertyName: '{$fileName}Html'}))
+	.pipe(gulp.dest('./')); 
 });
 
 ```
