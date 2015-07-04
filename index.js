@@ -8,13 +8,17 @@ var PLUGIN_NAME = 'gulp-html-to-ts';
 
 // html -> js processing functions:
 // Originally from karma-html2js-preprocessor
-var escapeContent = function (content, quoteChar) {
-    quoteChar = quoteChar || '\'';
+var escapeContent = function (content) {
+    var singleQuoteChar = '\'';
+	var singleQuoteRegexp = new RegExp('\\' + singleQuoteChar, 'g');
+
+    var doubleQuoteChar = '\"';
+	var doubleQuoteRegexp = new RegExp('\\' + doubleQuoteChar, 'g');
 	
-	var quoteRegexp = new RegExp('\\' + quoteChar, 'g');
-    var nlReplace = '';
-    
-	return content.replace(quoteRegexp, '\\' + quoteChar).replace(/\r?\n/g, nlReplace);
+	return content
+		.replace(singleQuoteRegexp, '\\' + singleQuoteChar)
+		.replace(doubleQuoteRegexp, '\\' + doubleQuoteChar)
+		.replace(/\r?\n/g, " ");
 };
 
 // Remove bom when reading utf8 files
