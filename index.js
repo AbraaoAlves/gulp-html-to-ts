@@ -28,24 +28,32 @@ function stripBOM(str) {
         : str;
 }
 
-function html2Ts(config){
-	var param = {};
-	config = config || {};
+function fillConfig(config, folderName, fileName){
+	for (var key in config) {
+		if (config.hasOwnProperty(key)) {
+			config[key] = config[key].replace('{$folderName}', folderName).replace('{$fileName}', fileName);
+		}
+	}
+}
+
+function html2Ts(appPrefixOrConfig){
+	var config = appPrefixOrConfig || {moduleName:'{$fileName}', propertyName:'html'};
 	
-	param.fileSrcType = config.fileSrcType || '.html';
-	param.fileDestType = config.fileDestType || '.ts';
-	param.tsTemplate =  config.tsTemplate || "module $folderName { export var $fileName = \'$fileContent\';}";
-		
+	if(typeof(config) == "string"){
+		config = {moduleName:appPrefixOrConfig+'.{$folderName}', propertyName:'html'};
+	}	
+	
 	return through.obj( function( file, enc, done ) {
 		if (file.isNull()) {
 			done(null, file); //empty file
 			return;
 		}
+
+		var templateContent = "module $moduleName { export var $propertyName = \'$fileContent\';}";
+		var fileName = path.basename(file.path, '.html');
 		
-		
-		var fileName = path.basename(file.path, param.fileSrcType);
 		if(!fileName){
-			this.emit('error', new PluginError(PLUGIN_NAME, 'file <'+ file.path +'> not converted!'));
+			this.emit('error', new PluginError(PLUGIN_NAME, 'file <'+ file.path +'> not supported!'));
 			return done();
 		}
 
@@ -53,9 +61,10 @@ function html2Ts(config){
 		var folderName = path.basename(dirName);
 		var content = stripBOM(escapeContent(file.contents.toString()));
 		
-		content = param.tsTemplate
-			.replace("$folderName", folderName)
-			.replace("$fileName", fileName)
+		fillConfig(config, folderName, fileName);
+		content = templateContent
+			.replace('$moduleName', config.moduleName)
+			.replace("$propertyName", config.propertyName)
 			.replace('$fileContent', content);
 		
 		if( file.isStream() ) {
@@ -71,7 +80,7 @@ function html2Ts(config){
 			file.contents = new Buffer( content );
 		}
 
-		file.path += param.fileDestType;
+		file.path += ".ts";
 		this.push( file );
 		
 		return done();
