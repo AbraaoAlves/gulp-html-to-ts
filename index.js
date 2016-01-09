@@ -8,13 +8,17 @@ var PLUGIN_NAME = 'gulp-html-to-ts';
 
 // html -> js processing functions:
 // Originally from karma-html2js-preprocessor
-var escapeContent = function (content, quoteChar) {
-    quoteChar = quoteChar || '\'';
+var escapeContent = function (content) {
+    var singleQuoteChar = '\'';
+	var singleQuoteRegexp = new RegExp('\\' + singleQuoteChar, 'g');
+
+    var doubleQuoteChar = '\"';
+	var doubleQuoteRegexp = new RegExp('\\' + doubleQuoteChar, 'g');
 	
-	var quoteRegexp = new RegExp('\\' + quoteChar, 'g');
-    var nlReplace = '';
-    
-	return content.replace(quoteRegexp, '\\' + quoteChar).replace(/\r?\n/g, nlReplace);
+	return content
+		.replace(singleQuoteRegexp, '\\' + singleQuoteChar)
+		.replace(doubleQuoteRegexp, '\\' + doubleQuoteChar)
+		.replace(/\r?\n/g, " ");
 };
 
 // Remove bom when reading utf8 files
@@ -24,32 +28,24 @@ function stripBOM(str) {
         : str;
 }
 
-function fillConfig(config, folderName, fileName){
-	for (var key in config) {
-		if (config.hasOwnProperty(key)) {
-			config[key] = config[key].replace('{$folderName}', folderName).replace('{$fileName}', fileName);
-		}
-	}
-}
-
-function html2Ts(appPrefixOrConfig){
-	var config = appPrefixOrConfig || {moduleName:'{$fileName}', propertyName:'html'};
+function html2Ts(config){
+	var param = {};
+	config = config || {};
 	
-	if(typeof(config) == "string"){
-		config = {moduleName:appPrefixOrConfig+'.{$folderName}', propertyName:'html'};
-	}	
-	
+	param.fileSrcType = config.fileSrcType || '.html';
+	param.fileDestType = config.fileDestType || '.ts';
+	param.tsTemplate =  config.tsTemplate || "module $folderName { export var $fileName = \'$fileContent\';}";
+		
 	return through.obj( function( file, enc, done ) {
 		if (file.isNull()) {
 			done(null, file); //empty file
 			return;
 		}
-
-		var templateContent = "module $moduleName { export var $propertyName = \'$fileContent\';}";
-		var fileName = path.basename(file.path, '.html');
 		
+		
+		var fileName = path.basename(file.path, param.fileSrcType);
 		if(!fileName){
-			this.emit('error', new PluginError(PLUGIN_NAME, 'file <'+ file.path +'> not supported!'));
+			this.emit('error', new PluginError(PLUGIN_NAME, 'file <'+ file.path +'> not converted!'));
 			return done();
 		}
 
@@ -57,10 +53,9 @@ function html2Ts(appPrefixOrConfig){
 		var folderName = path.basename(dirName);
 		var content = stripBOM(escapeContent(file.contents.toString()));
 		
-		fillConfig(config, folderName, fileName);
-		content = templateContent
-			.replace('$moduleName', config.moduleName)
-			.replace("$propertyName", config.propertyName)
+		content = param.tsTemplate
+			.replace("$folderName", folderName)
+			.replace("$fileName", fileName)
 			.replace('$fileContent', content);
 		
 		if( file.isStream() ) {
@@ -76,7 +71,7 @@ function html2Ts(appPrefixOrConfig){
 			file.contents = new Buffer( content );
 		}
 
-		file.path += ".ts";
+		file.path += param.fileDestType;
 		this.push( file );
 		
 		return done();
