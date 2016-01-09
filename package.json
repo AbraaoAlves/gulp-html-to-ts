@@ -1,6 +1,6 @@
 {
   "name": "gulp-html-to-ts",
-  "version": "0.1.3",
+  "version": "0.1.6",
   "description": "Gulp task that converts a html file into a ts file containing an module with string template",
   "main": "index.js",
   "scripts": {
